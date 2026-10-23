@@ -1,0 +1,105 @@
+# DurakPOS kasa masaüstü programını OTOMATİK derler ve yayınlar.
+#
+# Nasıl çalışır:
+#   1. app/package.json içindeki "version" numarasını artırıp (ör. 1.0.19 -> 1.0.20)
+#      GitHub'a gönderin — ya da GitHub > Actions > "Masaüstü programını derle"
+#      > "Run workflow" düğmesine basın (telefondan da olur).
+#   2. GitHub kendi Windows makinesinde programı derler (~5-8 dk).
+#   3. Çıkan .exe, .blockmap ve latest.yml dosyaları desktop-updates/ klasörüne
+#      kendiliğinden konur. Kasalar 30 dk içinde kendi kendine güncellenir,
+#      durakpos.com/indir adresi de yeni sürümü verir.
+#
+# Aynı sürüm numarası zaten yayınlandıysa tekrar derlemez (boşuna iş yapmaz).
+
+name: Masaüstü programını derle
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'app/**'
+      - '.github/workflows/build-desktop.yml'
+  # Değişiklik önerisinde (PR) sadece derleyip indirilebilir dosya üretir,
+  # kasalara YAYINLAMAZ — önce kendi bilgisayarınızda deneyebilmeniz için.
+  pull_request:
+    paths:
+      - 'app/**'
+      - '.github/workflows/build-desktop.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-desktop
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Sürüm kontrolü
+        id: ver
+        run: |
+          NEW=$(node -p "require('./app/package.json').version")
+          OLD=$(grep -m1 '^version:' desktop-updates/latest.yml 2>/dev/null | awk '{print $2}' || true)
+          echo "Yeni: $NEW  Yayındaki: $OLD"
+          echo "version=$NEW" >> "$GITHUB_OUTPUT"
+          if [ "$NEW" = "$OLD" ] && [ "${{ github.event_name }}" = "push" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::Sürüm $NEW zaten yayında — derleme atlandı. Yeni sürüm için app/package.json'da version'ı artırın."
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/setup-node@v4
+        if: steps.ver.outputs.skip == 'false'
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - name: Bağımlılıkları kur
+        if: steps.ver.outputs.skip == 'false'
+        working-directory: app
+        run: npm ci || npm install
+
+      - name: Derle (Windows kurulum dosyası)
+        if: steps.ver.outputs.skip == 'false'
+        working-directory: app
+        run: npx electron-builder --win --publish never
+
+      - name: Deneme için indirilebilir dosya
+        if: steps.ver.outputs.skip == 'false'
+        uses: actions/upload-artifact@v4
+        with:
+          name: DurakPOS-Setup-${{ steps.ver.outputs.version }}
+          path: app/dist/*.exe
+          retention-days: 14
+
+      - name: desktop-updates klasörüne koy
+        if: steps.ver.outputs.skip == 'false' && github.event_name != 'pull_request'
+        run: |
+          V="${{ steps.ver.outputs.version }}"
+          EXE="app/dist/DurakPOS Setup $V.exe"
+          test -f "$EXE" || { echo "::error::Kurulum dosyası bulunamadı: $EXE"; ls app/dist; exit 1; }
+          # Eski kurulum dosyalarını sil — her biri ~80 MB, depo şişmesin.
+          git rm -q --ignore-unmatch desktop-updates/*.exe desktop-updates/*.blockmap || true
+          mkdir -p desktop-updates
+          cp "$EXE" "$EXE.blockmap" app/dist/latest.yml desktop-updates/
+          ls -la desktop-updates
+
+      - name: GitHub'a gönder
+        if: steps.ver.outputs.skip == 'false' && github.event_name != 'pull_request'
+        run: |
+          git config user.name "DurakPOS Derleme"
+          git config user.email "actions@users.noreply.github.com"
+          git add desktop-updates
+          git commit -m "Masaüstü programı ${{ steps.ver.outputs.version }} otomatik derlendi" || { echo "Değişiklik yok"; exit 0; }
+          git pull --rebase origin main
+          git push origin HEAD:main
