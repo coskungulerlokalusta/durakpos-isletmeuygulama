@@ -4,6 +4,13 @@ const https = require('https');
 const { autoUpdater } = require('electron-updater');
 const path = require('path');
 
+// HTTP/3 (QUIC) KAPALI: Cloudflare/LiteSpeed "HTTP/3 ile bağlan" diyor; bu
+// bağlantıda kasa sayfasının indirmesi yarıda takılıyor (teşhis satırı
+// "html=0ms/0KB/h3", ekran "Sunucuya bağlanılıyor"da kalıyor). Sunucudaki
+// "Alt-Svc: clear" Cloudflare arkasında her zaman yetmiyor — programın
+// kendisinde kapatıyoruz, bağlantılar normal TCP (HTTP/2) ile kurulur.
+app.commandLine.appendSwitch('disable-quic');
+
 // Tarayıcı menüsünü (Dosya/Düzen/Görünüm gibi) tamamen kaldırıyoruz —
 // gerçek bir program gibi görünsün, tarayıcı gibi değil.
 Menu.setApplicationMenu(null);
