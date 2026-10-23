@@ -1,0 +1,25 @@
+{
+  "name": "durakpos-desktop",
+  "version": "1.0.19",
+  "description": "DurakPOS Kasa - Masaüstü Uygulaması",
+  "main": "main.js",
+  "author": "DurakPOS",
+  "dependencies": {
+    "electron-updater": "^6.3.9"
+  },
+  "devDependencies": {
+    "electron": "^32.0.0",
+    "electron-builder": "^26.15.3"
+  },
+  "build": {
+    "appId": "com.durakpos.desktop",
+    "productName": "DurakPOS",
+    "publish": {
+      "provider": "generic",
+      "url": "https://raw.githubusercontent.com/coskungulerlokalusta/durakpos-isletmeuygulama/main/desktop-updates/"
+    },
+    "win": {
+      "target": "nsis"
+    }
+  }
+}
