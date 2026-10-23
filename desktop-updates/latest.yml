@@ -1,8 +1,8 @@
-version: 1.0.18
+version: 1.0.20
 files:
-  - url: DurakPOS Setup 1.0.18.exe
-    sha512: xmxV1oynfFE18e+D0LDHFQQqKgAoU2LU9o2i3c1Y/BytOuEMFp6FZlVFfWgguqA3ozZJl/fMDlbtLFGMfYh1SA==
-    size: 78813386
-path: DurakPOS Setup 1.0.18.exe
-sha512: xmxV1oynfFE18e+D0LDHFQQqKgAoU2LU9o2i3c1Y/BytOuEMFp6FZlVFfWgguqA3ozZJl/fMDlbtLFGMfYh1SA==
-releaseDate: '2026-09-04T07:24:25.748Z'
+  - url: DurakPOS Setup 1.0.20.exe
+    sha512: 9qsjtLEuUhEaWuOLzaEVpsHPN09AejwIme/PBqN89mvwqx+j4GQZOKGLzYUUgyKVd9NLwZN7GJbbdZEJkILGgQ==
+    size: 78816153
+path: DurakPOS Setup 1.0.20.exe
+sha512: 9qsjtLEuUhEaWuOLzaEVpsHPN09AejwIme/PBqN89mvwqx+j4GQZOKGLzYUUgyKVd9NLwZN7GJbbdZEJkILGgQ==
+releaseDate: '2026-10-23T09:12:03.922Z'
