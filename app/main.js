@@ -172,9 +172,12 @@ function createWindow() {
       if (!ok) return;
     }
     lastLoadTime = Date.now();
-    win.webContents.session.clearCache().finally(() => {
-      win.loadURL(freshRemoteUrl()).then(() => { hasEverLoadedSuccessfully = true; }).catch(fallbackToLocal);
-    });
+    // HIZ: Eskiden burada her yüklemede clearCache() ile TÜM önbellek
+    // siliniyordu — ürün fotoğrafları (1 yıl önbelleklenmek üzere
+    // işaretli), PDF kütüphaneleri vb. her açılışta ve her 20 dakikada bir
+    // baştan indiriliyordu. Sayfanın kendisinin taze gelmesi için adresteki
+    // ?_=zaman damgası zaten yeterli; diğer dosyaların önbelleği korunuyor.
+    win.loadURL(freshRemoteUrl()).then(() => { hasEverLoadedSuccessfully = true; }).catch(fallbackToLocal);
   }
   // Kasa sayfası dışında bir yere gidilmesin; dış bağlantılar (ör. WhatsApp)
   // programın içinde değil, bilgisayarın tarayıcısında açılsın. Fiş/rapor
