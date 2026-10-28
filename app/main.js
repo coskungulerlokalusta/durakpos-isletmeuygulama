@@ -382,6 +382,29 @@ ipcMain.handle('print-network', async (event, job = {}) => {
   });
 });
 
+// ---- Yazarkasa POS köprüsü (bkz. pos/bridge.js) ----
+// Kasa sayfası işletmenin POS ayarlarını (Panel → POS Ayarları) buraya verir;
+// sürücü seçiliyse kart/nakit ödeme cihaza gider, askıdaki ödemeler diskte tutulur.
+const { PosBridge } = require('./pos/bridge');
+let posBridge = null;
+const getPosBridge = () => (posBridge ||= new PosBridge(app.getPath('userData')));
+ipcMain.handle('pos', async (event, op, arg) => {
+  if (!isTrustedSender(event)) return { ok: false, error: 'Yetkisiz istek' };
+  const b = getPosBridge();
+  try {
+    switch (op) {
+      case 'configure': return b.configure(arg || {});
+      case 'status': return b.status();
+      case 'connect': return await b.connect();
+      case 'sale': return await b.sale(arg || {});
+      case 'pending': return await b.pending();
+      case 'ack': return b.ack(String(arg || ''));
+      case 'report': return await b.report(String(arg || ''));
+      default: return { ok: false, error: 'Bilinmeyen POS işlemi' };
+    }
+  } catch (e) { return { ok: false, error: e.message }; }
+});
+
 // Kasa çekmecesini otomatik açma özelliği — bunun için gereken "printer"
 // paketi çok eski bir native (C++) modül olduğu için, kurulum bilgisayarında
 // Visual Studio derleme araçları + yeterli disk alanı gerektiriyordu. Bu,
