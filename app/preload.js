@@ -20,4 +20,14 @@ contextBridge.exposeInMainWorld('durakPOS', {
   printNetwork: (job) => ipcRenderer.invoke('print-network', job || {}),
   openCustomerDisplay: (tenantSlug) => ipcRenderer.invoke('open-customer-display', tenantSlug),
   openCashDrawer: () => ipcRenderer.invoke('open-cash-drawer'),
+  // 1.0.21: yazarkasa POS köprüsü (Ingenico GMP-3 / deneme cihazı)
+  pos: {
+    configure: (cfg) => ipcRenderer.invoke('pos', 'configure', cfg || {}),
+    status: () => ipcRenderer.invoke('pos', 'status'),
+    connect: () => ipcRenderer.invoke('pos', 'connect'),
+    sale: (req) => ipcRenderer.invoke('pos', 'sale', req || {}),
+    pending: () => ipcRenderer.invoke('pos', 'pending'),
+    ack: (txnId) => ipcRenderer.invoke('pos', 'ack', txnId),
+    report: (kind) => ipcRenderer.invoke('pos', 'report', kind),
+  },
 });
